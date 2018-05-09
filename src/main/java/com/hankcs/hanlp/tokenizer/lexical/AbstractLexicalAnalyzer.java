@@ -10,6 +10,7 @@
  */
 package com.hankcs.hanlp.tokenizer.lexical;
 
+import com.hankcs.hanlp.HanLP;
 import com.hankcs.hanlp.collection.AhoCorasick.AhoCorasickDoubleArrayTrie;
 import com.hankcs.hanlp.corpus.document.sentence.Sentence;
 import com.hankcs.hanlp.corpus.document.sentence.word.CompoundWord;
@@ -19,9 +20,11 @@ import com.hankcs.hanlp.corpus.tag.Nature;
 import com.hankcs.hanlp.dictionary.CoreDictionary;
 import com.hankcs.hanlp.dictionary.CustomDictionary;
 import com.hankcs.hanlp.dictionary.other.CharTable;
+import com.hankcs.hanlp.dictionary.stopword.CoreStopWordDictionary;
 import com.hankcs.hanlp.model.perceptron.tagset.NERTagSet;
 import com.hankcs.hanlp.model.perceptron.utility.PosTagUtility;
 import com.hankcs.hanlp.seg.CharacterBasedSegment;
+import com.hankcs.hanlp.seg.Segment;
 import com.hankcs.hanlp.seg.common.Term;
 
 import java.util.*;
@@ -33,6 +36,7 @@ import java.util.*;
  */
 public abstract class AbstractLexicalAnalyzer extends CharacterBasedSegment implements LexicalAnalyzer
 {
+    public static Segment SEGMENT = HanLP.newSegment();
     protected Segmenter segmenter;
     protected POSTagger posTagger;
     protected NERecognizer neRecognizer;
@@ -120,10 +124,31 @@ public abstract class AbstractLexicalAnalyzer extends CharacterBasedSegment impl
      * @param sentence
      * @return
      */
+//    public List<String> segment(String sentence)
+//    {
+//        return segment(sentence, CharTable.convert(sentence));
+//    }
+
+    /**
+     * 为结构化感知机添加停用词处理
+     * @param sentence
+     * @return
+     */
     public List<String> segment(String sentence)
     {
-        return segment(sentence, CharTable.convert(sentence));
+        List<String> resultList = segment(sentence, CharTable.convert(sentence));
+        ListIterator<String> listIterator = resultList.listIterator();
+        while (listIterator.hasNext())
+        {
+            if (CoreStopWordDictionary.contains(listIterator.next()))
+            {
+                listIterator.remove();
+            }
+        }
+
+        return resultList;
     }
+
 
     @Override
     public String[] recognize(String[] wordArray, String[] posArray)

@@ -11,9 +11,12 @@
  */
 package com.hankcs.demo;
 
+import com.hankcs.hanlp.dictionary.stopword.CoreStopWordDictionary;
+import com.hankcs.hanlp.seg.Segment;
 import com.hankcs.hanlp.seg.common.Term;
 import com.hankcs.hanlp.tokenizer.NotionalTokenizer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +33,25 @@ public class DemoNotionalTokenizer
         // 自动断句+去除停用词
         for (List<Term> sentence : NotionalTokenizer.seg2sentence(text))
         {
+            CoreStopWordDictionary.apply(sentence);
+            System.out.println(sentence);
+        }
+//        测试医院名称分词
+        ArrayList<String> list_hos = new ArrayList<String>();
+        list_hos.add("上海市金山区朱泾地区地段医院");
+        list_hos.add("中国人保石家庄分公司保险医院");
+        list_hos.add("华北理工大学冀唐学院附属医院");
+        list_hos.add("上饶市红十字烧伤整形骨科医院");
+        list_hos.add("上海中医药大学附属龙华医院");
+        list_hos.add("安徽中医学院第二附属医院安徽中医学院附属针灸医院");
+        list_hos.add("中国人民解放军三七零一五部队医院");
+        list_hos.add("广西中医药大学第一附属医院仁爱分院");
+        list_hos.add("上海交通大学医学院附属第九人民医院（北院）");
+        list_hos.add("解放军第3542工厂医院");
+        for (String item : list_hos) {
+            CoreStopWordDictionary.add("医院");
+            CoreStopWordDictionary.add("附属");
+            List<Term> sentence = NotionalTokenizer.segment(item);
             System.out.println(sentence);
         }
     }

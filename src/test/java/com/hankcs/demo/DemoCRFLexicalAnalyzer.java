@@ -13,6 +13,7 @@ package com.hankcs.demo;
 import com.hankcs.hanlp.model.crf.CRFLexicalAnalyzer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * CRF词法分析器
@@ -32,6 +33,18 @@ public class DemoCRFLexicalAnalyzer
         {
             System.out.println(analyzer.analyze(sentence));
 //            System.out.println(analyzer.seg(sentence));
+        }
+        ArrayList<String> list_hos = new ArrayList<String>();
+        list_hos.add("上海市金山区朱泾地区地段医院");
+        list_hos.add("中国人保石家庄分公司保险医院");
+        list_hos.add("华北理工大学冀唐学院附属医院");
+        list_hos.add("上饶市红十字烧伤整形骨科医院");
+        list_hos.add("上海中医药大学附属龙华医院");
+        list_hos.add("安徽中医学院第二附属医院安徽中医学院附属针灸医院");
+        list_hos.add("中国人民解放军三七零一五部队医院");
+        list_hos.add("广西中医药大学第一附属医院仁爱分院");
+        for (String item : list_hos) {
+            System.out.println(analyzer.analyze(item));
         }
     }
 }

@@ -97,6 +97,7 @@ public class PerceptronSegmenter extends PerceptronTagger implements Segmenter
         return result;
     }
 
+
     /**
      * 在线学习
      *
