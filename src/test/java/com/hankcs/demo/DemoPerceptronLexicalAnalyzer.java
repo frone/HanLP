@@ -10,6 +10,7 @@
  */
 package com.hankcs.demo;
 
+import com.hankcs.hanlp.corpus.document.sentence.Sentence;
 import com.hankcs.hanlp.dictionary.stopword.CoreStopWordDictionary;
 import com.hankcs.hanlp.model.perceptron.Config;
 import com.hankcs.hanlp.model.perceptron.PerceptronLexicalAnalyzer;
@@ -80,17 +81,28 @@ public class DemoPerceptronLexicalAnalyzer {
         list_hos.add("广西中医药大学第一附属医院仁爱分院");
         list_hos.add("上海交通大学医学院附属第九人民医院（北院）");
         list_hos.add("解放军第3542工厂医院");
+        list_hos.add("和布克塞尔蒙古自治县人民医院");
+        list_hos.add("察布查尔锡伯");
+        list_hos.add("巴里坤哈萨克");
+        list_hos.add("民和回族土族");
+        list_hos.add("新疆维吾尔");
 
         CoreStopWordDictionary.add("医院");
         CoreStopWordDictionary.add("附属");
+        CoreStopWordDictionary.add("北院");
+        CoreStopWordDictionary.add("中国");
 
 //        PerceptronLexicalAnalyzer analyzer2 = new PerceptronLexicalAnalyzer();
         PerceptronLexicalAnalyzer analyzer2 = new PerceptronLexicalAnalyzer(Config.CWS_MODEL_FILE, Config.POS_MODEL_FILE, Config.NER_MODEL_FILE);
-        analyzer2.learn("人保");
+
+//        analyzer2.enableIndexMode(4).enableNumberQuantifierRecognize(true).enablePartOfSpeechTagging(true);
+//            .enablePlaceRecognize(true)
+        analyzer2.learn("人保/n 民和/n 冀唐/n");
         for (String item : list_hos) {
-            List list = analyzer2.segment(item);
-//            CoreStopWordDictionary.apply(list);
-            System.out.println(list);
+            List result = analyzer2.segment(item);
+            System.out.println(result);
+//            System.out.println(result.get(0).toString().replace("市",""));
+//            System.out.println(result.remove(0));
 //            CoreStopWordDictionary.apply(sentence);
 //            System.out.println(sentence);
         }

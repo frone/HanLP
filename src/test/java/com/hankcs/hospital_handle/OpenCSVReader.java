@@ -6,14 +6,10 @@ import com.opencsv.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
@@ -37,33 +33,114 @@ public class OpenCSVReader {
         return dest;
     }
 
+
+    //    计算医院名称分词结果的分词，返回计算得分
+    public static int calcMatchScore(List<String> l1, List<String> l2) throws IOException {
+        int result = 0;
+        String l1_head = l1.get(0);
+        String l2_head = l2.get(0);
+        int other_match = getIntersectCount(l1, l2);
+        result += other_match;
+        if (l1_head == l2_head) {
+//            头部匹配
+            if (other_match > 3) {
+                result += other_match - 1;
+            } else {
+                result += 2;
+            }
+//            头部是城市额外加成2分
+            if (GenShortPosition.getCityList().contains(l1_head)) {
+                result += 2;
+            }
+//        如果分词结果包含头部只有一个匹配则得分清零
+            if (other_match <= 1) {
+                result = 0;
+            }
+        }
+
+        return result;
+    }
+
+
+    /*
+    计算两个list的交集数量
+     */
+    public static int getIntersectCount(List ls, List ls2) {
+        List list = new ArrayList(Arrays.asList(new Object[ls.size()]));
+        Collections.copy(list, ls);
+        list.retainAll(ls2);
+        return list.size();
+    }
+
     public static void main(String[] args) throws IOException {
         OpenCSVReader handler = new OpenCSVReader();
 //        List<HosBean> beans = new ArrayList<HosBean>();
-//        beans.add(new HosBean(1, "sundar.pichai@gmail.com", "good bad"));
-//        beans.add(new HosBean(2, "satya.nadella@outlook.com", "good bad"));
         try {
-            List<HosBean> beans = handler.read_csv_by_line(SAMPLE_CSV_FILE_PATH);
-//            for (HosBean bean : beans
-//                ) {
-//                System.out.print(bean.getId() + "\t");
-//                System.out.print(bean.getName() + "\t");
-//                System.out.println(bean.getSeg_words());
+            List<HosBean> beans = handler.getSegNameBeansFromCSV(SAMPLE_CSV_FILE_PATH);
+            for (HosBean bean : beans
+                ) {
+                HashMap<String, Integer> map = new HashMap<String, Integer>();
+                for (HosBean bean2 : beans
+                    ) {
+                    if (bean.equals(bean2)) {
+                        continue;
+                    } else {
+                        List seg1 = bean.getSeg_words();
+                        List seg2 = bean2.getSeg_words();
+                        if (seg1.size() == 0 || seg2.size() == 0) {
+                            continue;
+                        }
+                        int interCount = calcMatchScore(seg1, seg2);
+                        if (interCount > 0) {
+                            map.put(bean2.getName(), interCount);
+                        }
+                    }
 
-//            }
-            handler.write_csv_by_bean(beans, STRING_ARRAY_SAMPLE + ".tmp.csv");
+                }
+//            ArrayList list = new ArrayList(((HashMap<String, Integer>) table).values());
+
+                //这里将map.entrySet()转换成list
+                List<Map.Entry<String, Integer>> list = new ArrayList<Map.Entry<String, Integer>>(map.entrySet());
+//                System.out.println(list.size());
+                //然后通过比较器来实现排序
+                list.sort(new Comparator<Map.Entry<String, Integer>>() {//降序序排序
+                    public int compare(Map.Entry<String, Integer> o1,
+                                       Map.Entry<String, Integer> o2) {
+                        return o2.getValue().compareTo(o1.getValue());
+                    }
+                });
+                List<Map.Entry<String, Integer>> match_list = null;
+                if (list.size() >= 10) {
+                    match_list = list.subList(0, 10);
+                } else if (list.size() >= 5) {
+                    match_list = list.subList(0, 5);
+                } else {
+                    match_list = list;
+                }
+//                if (match_list.size() == 0) {
+//                    beans.remove(bean);
+//                } else {
+                bean.setMatch_table(match_list);
+            }
+
+//            System.out.print(bean.getId() + "\t");
+//            System.out.print(bean.getName() + "\t");
+//            System.out.println(bean.getSeg_words() + "\t");
+//            for (Map.Entry<String, Integer> mapping : match_list) {
+//                System.out.println(mapping.getKey() + ":" + mapping.getValue());
+            handler.write_csv_by_bean(beans, STRING_ARRAY_SAMPLE + ".0510tmp.csv");
         } catch (CsvDataTypeMismatchException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         } catch (CsvRequiredFieldEmptyException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
     }
 
     /*
-    逐行读取csv文件并装载入beans中
+    逐行读取csv文件,分词并装载入beans中返回
      */
-    public List<HosBean> read_csv_by_line(String path) throws IOException {
+    public List<HosBean> getSegNameBeansFromCSV(String path) throws IOException {
         Reader reader = null;
         List<HosBean> beans = new ArrayList<HosBean>();
         try {
@@ -71,14 +148,16 @@ public class OpenCSVReader {
         } catch (IOException e) {
             System.out.println(e);
         }
+//        读取csv文件 跳过首行
         CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build();
-        // Reading Records One by One in a String array
-
         String[] nextRecord;
         PerceptronLexicalAnalyzer analyzer = new HosNameSeg().getAnalyzer();
         while ((nextRecord = csvReader.readNext()) != null) {
-            HosBean bean = new HosBean(Integer.parseInt(nextRecord[0]), nextRecord[1],
-                String.join(" ", analyzer.segment(replaceBlank(nextRecord[1]))));
+//      替换掉医院名称中的特殊字符
+            String hos_name = replaceBlank(nextRecord[1]);
+//      将切词结果和原医院名称放入Bean
+            HosBean bean = new HosBean(Integer.parseInt(nextRecord[0]), hos_name,
+                analyzer.segment(hos_name));
             beans.add(bean);
         }
         reader.close();

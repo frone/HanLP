@@ -3,6 +3,8 @@ package com.hankcs.hospital_handle;
 import com.hankcs.hanlp.dictionary.stopword.CoreStopWordDictionary;
 import com.hankcs.hanlp.model.perceptron.Config;
 import com.hankcs.hanlp.model.perceptron.PerceptronLexicalAnalyzer;
+import com.hankcs.hanlp.model.perceptron.PerceptronPOSTagger;
+import com.hankcs.hanlp.model.perceptron.PerceptronSegmenter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,15 +34,28 @@ public class HosNameSeg {
         CoreStopWordDictionary.add("院区");
         CoreStopWordDictionary.add("站");
         CoreStopWordDictionary.add("指导站");
-        CoreStopWordDictionary.add("病院");
+//        CoreStopWordDictionary.add("病院");
         CoreStopWordDictionary.add("有限公司");
-        CoreStopWordDictionary.add("醫務所");
-        CoreStopWordDictionary.add("药房");
+//        CoreStopWordDictionary.add("醫務所");
+//        CoreStopWordDictionary.add("药房");
         CoreStopWordDictionary.add("地段");
         CoreStopWordDictionary.add("专科");
+        CoreStopWordDictionary.add("街道");
+        CoreStopWordDictionary.add("城区");
+        CoreStopWordDictionary.add("矿区");
+        CoreStopWordDictionary.add("郊区");
+
+//        CoreStopWordDictionary.add("北京市");
+//        CoreStopWordDictionary.add("上海市");
+//        CoreStopWordDictionary.add("天津市");
+//        CoreStopWordDictionary.add("广州市");
+
+        CoreStopWordDictionary.add(")");
+        CoreStopWordDictionary.add("(");
 
         PerceptronLexicalAnalyzer analyzer = new PerceptronLexicalAnalyzer(Config.CWS_MODEL_FILE, Config.POS_MODEL_FILE, Config.NER_MODEL_FILE);
-        analyzer.learn("中国人保/n 冀唐/n 中日/n 院区/n 三环/n 中美/n 中日/n 垂杨柳/n 水锥子/n 青年沟/n 新源里/n");
+        analyzer.learn("中国人保/n 冀唐/n 中日/n 院区/n 三环/n 中美/n 中日/n 垂杨柳/n 水锥子/n 青年沟/n " +
+            "新源里/n 于都/n");
         return analyzer;
 
     }
@@ -64,14 +79,18 @@ public class HosNameSeg {
         list_hos.add("中山大学附属第一医院黄埔院区");
         list_hos.add("修文县计划生育宣传技术指导站");
         list_hos.add("吉林大学中日联谊医院二部");
+//        延边朝鲜族, 恩施土家族苗族, 湘西土家族苗族, 凉山彝族, 甘孜藏族, 阿坝藏族羌族, 黔东南苗族侗族, 黔南布依族苗族, 黔西南布依族苗族, 大理白族, 德宏傣族景颇族, 怒江傈僳族, 文山壮族苗族, 楚雄彝族, 红河哈尼族彝族, 西双版纳傣族, 迪庆藏族, 临夏回族, 甘南藏族, 果洛藏族, 海北藏族, 海南藏族, 海西蒙古族藏族, 玉树藏族, 黄南藏族, 伊犁哈萨克, 克孜勒苏柯尔克孜, 博尔塔拉蒙古, 巴音郭楞蒙古, 昌吉回族, 九龙半岛
 
+        list_hos.add("延边朝鲜族");
+        list_hos.add("恩施土家族苗族");
+        list_hos.add("湘西土家族苗族");
+        list_hos.add("凉山彝族");
+        list_hos.add("甘孜藏族");
         PerceptronLexicalAnalyzer analyzer = new HosNameSeg().getAnalyzer();
         for (String item : list_hos) {
             List<String> list= analyzer.segment(item);
-//            CoreStopWordDictionary.apply(list);
             System.out.println(String.join(" ",list));
-//            CoreStopWordDictionary.apply(sentence);
-//            System.out.println(sentence);
+            System.out.println(list.subList(0,1));
         }
     }
 }
